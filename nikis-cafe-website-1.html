@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Niki's Café Offenburg – Frühstück, Crêpes & Cocktails am Marktplatz</title>
+<meta name="description" content="Niki's Café Offenburg – Genießen Sie Frühstück, Crêpes, Waffeln, Matcha & Cocktails direkt am Marktplatz. Jetzt Tisch reservieren!"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   ROOT / TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --cream: #fdf6ec;
+  --cream2: #f5e8d0;
+  --espresso: #1a0f08;
+  --caramel: #c8832a;
+  --gold: #e8b84b;
+  --gold-light: #f5d07a;
+  --rose: #d4756b;
+  --matcha: #7b9e6b;
+  --midnight: #0d0a07;
+  --dark: #120c06;
+  --warm-gray: #8a7a6e;
+  --border: rgba(200,131,42,0.22);
+  --border-light: rgba(200,131,42,0.12);
+  --glow: rgba(232,184,75,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--midnight);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ═══════════════════════════════════════════
+   CUSTOM CURSOR
+═══════════════════════════════════════════ */
+#cursor {
+  position: fixed;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+  mix-blend-mode: screen;
+}
+#cursor-ring {
+  position: fixed;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(232,184,75,0.5);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s ease-out, width 0.3s, height 0.3s, border-color 0.3s;
+}
+body.cursor-hover #cursor { width: 22px; height: 22px; background: var(--rose); }
+body.cursor-hover #cursor-ring { width: 56px; height: 56px; border-color: var(--rose); }
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background 0.4s, backdrop-filter 0.4s, padding 0.4s;
+}
+nav.scrolled {
+  background: rgba(13,10,7,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.8rem 3rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--cream);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.nav-logo span { color: var(--gold); font-style: italic; }
+.nav-links {
+  display: flex; gap: 2.2rem; list-style: none;
+}
+.nav-links a {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--gold); }
+
+.nav-cta {
+  background: var(--caramel);
+  color: var(--cream) !important;
+  padding: 0.5rem 1.2rem;
+  border-radius: 2px;
+  transition: background 0.3s !important;
+}
+.nav-cta:hover { background: var(--gold) !important; color: var(--espresso) !important; }
+
+.nav-open { display: none; }
+@media (max-width: 768px) {
+  nav { padding: 1rem 1.5rem; }
+  nav.scrolled { padding: 0.7rem 1.5rem; }
+  .nav-links { display: none; }
+  .nav-open {
+    display: block;
+    background: none; border: 1px solid var(--border);
+    color: var(--cream); padding: 0.4rem 0.8rem;
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.15em; cursor: none;
+  }
+}
+
+/* MOBILE NAV OVERLAY */
+#mobile-nav {
+  display: none;
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(13,10,7,0.97);
+  backdrop-filter: blur(20px);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 2.5rem;
+}
+#mobile-nav.open { display: flex; }
+#mobile-nav a {
+  font-family: 'Playfair Display', serif; font-size: 2rem;
+  color: var(--cream); text-decoration: none;
+  transition: color 0.3s;
+}
+#mobile-nav a:hover { color: var(--gold); }
+#mobile-nav-close {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  background: none; border: 1px solid var(--border); color: var(--cream);
+  padding: 0.4rem 0.8rem; font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.1em; cursor: none;
+}
+
+/* ═══════════════════════════════════════════
+   STICKY MOBILE CTA
+═══════════════════════════════════════════ */
+#sticky-cta {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
+  background: rgba(13,10,7,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 0.8rem 1.5rem;
+  gap: 0.8rem;
+}
+@media (max-width: 768px) { #sticky-cta { display: flex; } }
+#sticky-cta a {
+  flex: 1; text-align: center; padding: 0.8rem;
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  text-decoration: none; border-radius: 2px;
+}
+.sticky-primary { background: var(--caramel); color: var(--cream) !important; }
+.sticky-secondary { border: 1px solid var(--border); color: var(--warm-gray) !important; }
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+#hero {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#hero-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(26,15,8,0.3) 0%, rgba(13,10,7,0.7) 100%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  text-align: center; padding: 2rem;
+  max-width: 800px;
+}
+.hero-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--caramel); margin-bottom: 1.5rem;
+  opacity: 0; transform: translateY(20px);
+  display: inline-flex; align-items: center; gap: 0.8rem;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--caramel));
+  width: 40px;
+}
+.hero-eyebrow::after { transform: scaleX(-1); }
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 900; line-height: 0.95;
+  color: var(--cream); margin-bottom: 0.3rem;
+  opacity: 0; transform: translateY(30px);
+}
+.hero-title em { color: var(--gold); font-style: italic; display: block; }
+.hero-sub {
+  font-family: 'DM Sans', sans-serif; font-weight: 300;
+  font-size: 1.1rem; color: var(--warm-gray);
+  margin: 1.5rem auto 2.5rem; max-width: 420px;
+  opacity: 0; transform: translateY(20px);
+}
+.hero-actions {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  opacity: 0; transform: translateY(20px);
+}
+.btn-primary {
+  background: var(--caramel);
+  color: var(--cream); padding: 0.85rem 2rem;
+  font-family: 'Space Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none; border: none; border-radius: 2px;
+  cursor: none; transition: background 0.3s, transform 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover { background: var(--gold); color: var(--espresso); transform: translateY(-2px); }
+.btn-ghost {
+  background: transparent;
+  color: var(--cream); padding: 0.85rem 2rem;
+  font-family: 'Space Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none; border: 1px solid var(--border);
+  border-radius: 2px; cursor: none; transition: border-color 0.3s, color 0.3s, transform 0.2s;
+  display: inline-block;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+/* HERO OPEN INDICATOR */
+.hero-open {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  z-index: 2; display: flex; align-items: center; gap: 0.6rem;
+  opacity: 0;
+}
+.open-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--matcha);
+  box-shadow: 0 0 10px var(--matcha);
+  animation: pulse-dot 2s infinite;
+}
+.open-dot.closed { background: var(--rose); box-shadow: 0 0 10px var(--rose); animation: none; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
+}
+.open-text {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray);
+}
+
+/* SCROLL INDICATOR */
+.scroll-hint {
+  position: absolute; bottom: 2rem; right: 3rem; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  opacity: 0;
+}
+.scroll-line {
+  width: 1px; height: 48px;
+  background: linear-gradient(to bottom, var(--caramel), transparent);
+  animation: scroll-drop 2s infinite;
+}
+@keyframes scroll-drop {
+  0% { transform: scaleY(0); transform-origin: top; opacity: 0; }
+  50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+  100% { transform: scaleY(1); transform-origin: bottom; opacity: 0; }
+}
+.scroll-label {
+  font-family: 'Space Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.25em; text-transform: uppercase; color: var(--warm-gray);
+  writing-mode: vertical-rl;
+}
+
+/* ═══════════════════════════════════════════
+   SPECIALS TICKER
+═══════════════════════════════════════════ */
+.ticker-wrap {
+  background: var(--caramel);
+  overflow: hidden; padding: 0.7rem 0;
+  white-space: nowrap;
+}
+.ticker-track {
+  display: inline-flex; gap: 3rem;
+  animation: ticker 30s linear infinite;
+}
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-item {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--espresso); display: flex; align-items: center; gap: 1rem;
+}
+.ticker-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--espresso); opacity: 0.5; }
+
+/* ═══════════════════════════════════════════
+   SECTIONS BASE
+═══════════════════════════════════════════ */
+section { overflow: hidden; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 3rem; }
+@media (max-width: 768px) { .container { padding: 0 1.5rem; } }
+
+.section-tag {
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--caramel);
+  margin-bottom: 1rem; display: block;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 700; color: var(--cream); line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+.section-title em { color: var(--gold); font-style: italic; }
+.section-intro {
+  color: var(--warm-gray); font-size: 1rem;
+  max-width: 520px; margin-bottom: 4rem;
+  font-weight: 300; line-height: 1.8;
+}
+.rule { width: 48px; height: 2px; background: linear-gradient(90deg, var(--caramel), transparent); margin: 1.2rem 0 1.8rem; }
+
+/* REVEAL ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(40px); }
+.reveal.visible { opacity: 1; transform: translateY(0); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+
+/* ═══════════════════════════════════════════
+   SPECIALTIES SECTION
+═══════════════════════════════════════════ */
+#specialties {
+  padding: 8rem 0;
+  background: var(--dark);
+  position: relative;
+}
+#specialties::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(200,131,42,0.06) 0%, transparent 70%);
+}
+
+.specialties-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+}
+@media (max-width: 900px) { .specialties-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .specialties-grid { grid-template-columns: 1fr; } }
+
+.spec-card {
+  background: var(--dark);
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+  cursor: none;
+  transition: background 0.4s;
+  display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 220px;
+}
+.spec-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(200,131,42,0.08) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.4s;
+}
+.spec-card:hover::before { opacity: 1; }
+.spec-card:hover { background: rgba(200,131,42,0.04); }
+
+.spec-icon {
+  font-size: 2.2rem; margin-bottom: 1rem;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.spec-card:hover .spec-icon { transform: scale(1.15) rotate(-5deg); }
+
+.spec-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem; font-weight: 700;
+  color: var(--cream); margin-bottom: 0.4rem;
+}
+.spec-desc {
+  font-size: 0.82rem; color: var(--warm-gray);
+  line-height: 1.6; flex: 1; margin-bottom: 1.2rem;
+}
+.spec-arrow {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.2em; color: var(--caramel);
+  text-transform: uppercase; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  transition: gap 0.3s;
+}
+.spec-card:hover .spec-arrow { gap: 0.8rem; }
+
+/* FEATURED 3D CARD */
+.spec-card.featured {
+  background: linear-gradient(135deg, rgba(200,131,42,0.12) 0%, rgba(200,131,42,0.04) 100%);
+  grid-column: span 2;
+}
+@media (max-width: 500px) { .spec-card.featured { grid-column: span 1; } }
+
+/* ═══════════════════════════════════════════
+   ABOUT / STORY SECTION
+═══════════════════════════════════════════ */
+#about {
+  padding: 8rem 0;
+  background: var(--midnight);
+  position: relative;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem; align-items: center;
+}
+@media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+.about-text {}
+.about-quote {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-style: italic; color: var(--cream);
+  line-height: 1.4; margin-bottom: 2rem;
+  position: relative; padding-left: 1.5rem;
+}
+.about-quote::before {
+  content: '';
+  position: absolute; left: 0; top: 0.2em; bottom: 0.2em;
+  width: 3px; background: linear-gradient(to bottom, var(--gold), var(--caramel));
+}
+.about-body {
+  color: var(--warm-gray); font-size: 0.95rem; line-height: 1.85;
+  margin-bottom: 2rem;
+}
+.hours-widget {
+  border: 1px solid var(--border); border-radius: 3px;
+  overflow: hidden; margin-top: 2.5rem;
+}
+.hours-header {
+  background: rgba(200,131,42,0.08);
+  padding: 0.9rem 1.4rem;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+}
+.hours-title {
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel);
+}
+.hours-status {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.hours-rows { padding: 0.5rem 0; }
+.hours-row {
+  display: flex; justify-content: space-between;
+  padding: 0.5rem 1.4rem;
+  font-size: 0.82rem; color: var(--warm-gray);
+  transition: background 0.2s;
+}
+.hours-row.today {
+  background: rgba(200,131,42,0.06);
+  color: var(--cream);
+}
+.hours-row.today .day-name { color: var(--gold); font-weight: 500; }
+.hours-time { font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+
+/* ABOUT VISUAL */
+.about-visual {
+  position: relative; height: 500px;
+}
+@media (max-width: 768px) { .about-visual { height: 300px; } }
+
+#about-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border-radius: 2px;
+}
+.about-card {
+  position: absolute; bottom: -1.5rem; left: -1.5rem;
+  background: rgba(13,10,7,0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 3px; padding: 1.2rem 1.5rem;
+  min-width: 180px;
+  z-index: 2;
+}
+.about-card-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem; font-weight: 700; color: var(--gold);
+  line-height: 1;
+}
+.about-card-label {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray);
+  margin-top: 0.3rem;
+}
+
+/* ═══════════════════════════════════════════
+   MENU SECTION
+═══════════════════════════════════════════ */
+#menu {
+  padding: 8rem 0;
+  background: var(--dark);
+}
+.menu-nav {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 3.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.menu-tab {
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.5rem 1rem; border-radius: 2px;
+  border: 1px solid var(--border); background: none;
+  color: var(--warm-gray); cursor: none;
+  transition: all 0.25s; white-space: nowrap;
+}
+.menu-tab:hover { border-color: var(--caramel); color: var(--cream); }
+.menu-tab.active { background: var(--caramel); border-color: var(--caramel); color: var(--cream); }
+
+.menu-panels {}
+.menu-panel { display: none; }
+.menu-panel.active { display: block; }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+@media (max-width: 900px) { .menu-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 550px) { .menu-grid { grid-template-columns: 1fr; } }
+
+.menu-card {
+  border: 1px solid var(--border-light);
+  border-radius: 3px; overflow: hidden;
+  background: var(--midnight);
+  transition: border-color 0.3s, transform 0.4s;
+  cursor: none;
+  transform-style: preserve-3d;
+}
+.menu-card:hover { border-color: var(--caramel); }
+
+.menu-card-img {
+  height: 180px; overflow: hidden; position: relative;
+}
+.menu-card-img-inner {
+  width: 100%; height: 100%;
+  background-size: cover; background-position: center;
+  transition: transform 0.5s ease;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4rem;
+}
+.menu-card:hover .menu-card-img-inner { transform: scale(1.06); }
+.menu-card-badge {
+  position: absolute; top: 0.8rem; right: 0.8rem;
+  background: var(--gold); color: var(--espresso);
+  font-family: 'Space Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.2rem 0.5rem; border-radius: 2px;
+}
+.menu-card-body { padding: 1.3rem 1.4rem; }
+.menu-card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem; font-weight: 700; color: var(--cream);
+  margin-bottom: 0.3rem;
+}
+.menu-card-desc {
+  font-size: 0.8rem; color: var(--warm-gray);
+  line-height: 1.55; margin-bottom: 0.8rem;
+}
+
+/* ═══════════════════════════════════════════
+   RESERVATION SECTION
+═══════════════════════════════════════════ */
+#reservation {
+  padding: 8rem 0;
+  background: var(--midnight);
+  position: relative; overflow: hidden;
+}
+#reservation::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 100% 50%, rgba(200,131,42,0.05) 0%, transparent 60%);
+}
+.reservation-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6rem; align-items: start;
+}
+@media (max-width: 768px) { .reservation-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+/* STEP FORM */
+.step-indicators {
+  display: flex; gap: 0.5rem; margin-bottom: 2.5rem;
+}
+.step-dot {
+  width: 32px; height: 4px; border-radius: 2px;
+  background: var(--border); transition: background 0.4s;
+}
+.step-dot.active { background: var(--caramel); }
+.step-dot.done { background: var(--matcha); }
+
+.form-step { display: none; }
+.form-step.active { display: block; animation: stepIn 0.4s cubic-bezier(0.16,1,0.3,1); }
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.step-label {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel);
+  margin-bottom: 0.5rem;
+}
+.step-title {
+  font-family: 'Playfair Display', serif; font-size: 1.5rem;
+  font-weight: 700; color: var(--cream); margin-bottom: 2rem;
+}
+
+.form-field { margin-bottom: 1.5rem; position: relative; }
+.form-field label {
+  display: block; font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray);
+  margin-bottom: 0.5rem;
+}
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%; background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border); border-radius: 2px;
+  color: var(--cream); padding: 0.9rem 1rem;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+  transition: border-color 0.3s, background 0.3s;
+  outline: none; cursor: none;
+  -webkit-appearance: none;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  border-color: var(--caramel);
+  background: rgba(200,131,42,0.04);
+}
+.form-field input::placeholder { color: var(--warm-gray); opacity: 0.7; }
+.form-field select option { background: var(--dark); }
+
+.guest-selector {
+  display: flex; align-items: center; gap: 1rem;
+}
+.guest-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--border); background: none;
+  color: var(--cream); font-size: 1.2rem;
+  cursor: none; transition: border-color 0.3s, background 0.3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.guest-btn:hover { border-color: var(--caramel); background: rgba(200,131,42,0.1); }
+.guest-count {
+  font-family: 'Playfair Display', serif; font-size: 2rem;
+  font-weight: 700; color: var(--gold); min-width: 40px; text-align: center;
+}
+
+.step-nav { display: flex; gap: 1rem; margin-top: 2rem; }
+.btn-step {
+  flex: 1; padding: 0.9rem; text-align: center;
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border: none; border-radius: 2px; cursor: none;
+  transition: all 0.3s;
+}
+.btn-step-prev {
+  background: none; border: 1px solid var(--border); color: var(--warm-gray);
+}
+.btn-step-prev:hover { border-color: var(--cream); color: var(--cream); }
+.btn-step-next {
+  background: var(--caramel); color: var(--cream);
+}
+.btn-step-next:hover { background: var(--gold); color: var(--espresso); }
+
+/* SUCCESS STATE */
+.reservation-success {
+  display: none; text-align: center; padding: 3rem 2rem;
+}
+.success-icon {
+  font-size: 3.5rem; margin-bottom: 1rem;
+  animation: pop-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.success-title {
+  font-family: 'Playfair Display', serif; font-size: 1.8rem;
+  font-weight: 700; color: var(--cream); margin-bottom: 0.5rem;
+}
+.success-sub { color: var(--warm-gray); font-size: 0.9rem; }
+
+/* RESERVATION VISUAL */
+.reservation-visual {
+  position: relative;
+}
+#reservation-canvas {
+  width: 100%; height: 420px; border-radius: 3px;
+  border: 1px solid var(--border-light);
+}
+@media (max-width: 768px) { #reservation-canvas { height: 240px; } }
+
+.review-strip {
+  margin-top: 2rem; overflow: hidden;
+}
+.review-track {
+  display: flex; gap: 1rem;
+  animation: review-scroll 20s linear infinite;
+}
+@keyframes review-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.review-card {
+  min-width: 240px; padding: 1.2rem 1.4rem;
+  border: 1px solid var(--border-light); border-radius: 3px;
+  background: rgba(255,255,255,0.02);
+  flex-shrink: 0;
+}
+.review-stars { color: var(--gold); font-size: 0.75rem; margin-bottom: 0.5rem; }
+.review-text { font-size: 0.8rem; color: var(--warm-gray); line-height: 1.55; margin-bottom: 0.6rem; }
+.review-author { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--caramel); }
+
+/* ═══════════════════════════════════════════
+   GIFT CARD SECTION
+═══════════════════════════════════════════ */
+#gutschein {
+  padding: 8rem 0;
+  background: var(--dark);
+  position: relative;
+}
+.gift-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: center;
+}
+@media (max-width: 768px) { .gift-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+/* 3D CARD */
+.card-scene {
+  perspective: 800px;
+  width: 100%; height: 280px;
+  display: flex; align-items: center; justify-content: center;
+}
+.gift-card-3d {
+  width: 380px; max-width: 100%; height: 220px;
+  transform-style: preserve-3d;
+  transform: rotateY(-15deg) rotateX(5deg);
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  cursor: none;
+  position: relative;
+}
+.gift-card-3d:hover { transform: rotateY(5deg) rotateX(-3deg); }
+.card-face {
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2a1a08 0%, #1a0f08 40%, #3d2510 100%);
+  border: 1px solid rgba(232,184,75,0.3);
+  padding: 1.8rem 2rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(200,131,42,0.1);
+}
+.card-face::before {
+  content: '';
+  position: absolute; top: -50%; right: -20%;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,184,75,0.12) 0%, transparent 70%);
+}
+.card-logo-3d {
+  font-family: 'Playfair Display', serif; font-size: 1.3rem;
+  font-weight: 700; color: var(--gold);
+}
+.card-logo-3d span { color: var(--cream); font-style: italic; }
+.card-amount-display {
+  font-family: 'Playfair Display', serif; font-size: 3rem;
+  font-weight: 900; color: var(--cream); line-height: 1;
+  transition: all 0.3s;
+}
+.card-bottom {
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray);
+}
+.card-shine {
+  position: absolute; inset: 0; border-radius: 12px;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shine 4s infinite;
+}
+@keyframes shine { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* AMOUNT SELECTOR */
+.amount-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.amount-btn {
+  padding: 0.7rem; border: 1px solid var(--border); border-radius: 2px;
+  background: none; color: var(--warm-gray); cursor: none;
+  font-family: 'Space Mono', monospace; font-size: 0.75rem;
+  transition: all 0.25s;
+}
+.amount-btn:hover { border-color: var(--caramel); color: var(--cream); }
+.amount-btn.selected { background: var(--caramel); border-color: var(--caramel); color: var(--cream); }
+
+.trust-pills {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem;
+}
+.trust-pill {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.35rem 0.8rem; border-radius: 2px;
+  border: 1px solid var(--border-light); color: var(--warm-gray);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* ═══════════════════════════════════════════
+   CONTACT SECTION
+═══════════════════════════════════════════ */
+#kontakt {
+  padding: 8rem 0;
+  background: var(--midnight);
+}
+.contact-grid {
+  display: grid; grid-template-columns: 1.2fr 1fr;
+  gap: 5rem; align-items: start;
+}
+@media (max-width: 768px) { .contact-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+/* ISOMETRIC MAP */
+.map-scene {
+  height: 300px; position: relative; overflow: hidden;
+  border: 1px solid var(--border); border-radius: 3px;
+  background: linear-gradient(135deg, #1a1008 0%, #0d0a07 100%);
+  margin-bottom: 2rem;
+}
+.iso-map {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotateX(45deg) rotateZ(-45deg);
+  transform-origin: center center;
+}
+.iso-block {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.iso-top { position: absolute; background: rgba(200,131,42,0.15); border: 1px solid rgba(200,131,42,0.2); }
+.iso-side { position: absolute; background: rgba(200,131,42,0.06); }
+
+.map-pin {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10; text-align: center;
+  animation: pin-bounce 2s infinite;
+}
+@keyframes pin-bounce {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 8px)); }
+}
+.map-pin-dot {
+  width: 14px; height: 14px; background: var(--rose);
+  border-radius: 50%; margin: 0 auto;
+  box-shadow: 0 0 20px rgba(212,117,107,0.6);
+}
+.map-pin-label {
+  font-family: 'Space Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.1em; color: var(--cream);
+  background: rgba(13,10,7,0.8); padding: 0.2rem 0.5rem;
+  border-radius: 2px; margin-top: 0.3rem; white-space: nowrap;
+  border: 1px solid var(--border);
+}
+
+.contact-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 500px) { .contact-info-grid { grid-template-columns: 1fr; } }
+.contact-block {
+  border: 1px solid var(--border-light); border-radius: 3px;
+  padding: 1.3rem; transition: border-color 0.3s;
+}
+.contact-block:hover { border-color: var(--border); }
+.contact-block-label {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel);
+  margin-bottom: 0.5rem;
+}
+.contact-block-value { color: var(--cream); font-size: 0.88rem; line-height: 1.55; }
+.contact-block-value a { color: var(--cream); text-decoration: none; transition: color 0.3s; }
+.contact-block-value a:hover { color: var(--gold); }
+
+/* CONTACT FORM */
+.contact-form-wrap {}
+.contact-textarea { height: 110px; resize: vertical; }
+
+.action-buttons {
+  display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem;
+}
+.action-btn {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem; border-radius: 3px;
+  text-decoration: none; color: var(--cream);
+  border: 1px solid var(--border);
+  font-size: 0.88rem; transition: all 0.3s; cursor: none;
+}
+.action-btn:hover { border-color: var(--caramel); background: rgba(200,131,42,0.05); }
+.action-btn-icon { font-size: 1.2rem; }
+.action-btn-text { flex: 1; }
+.action-btn-arrow { color: var(--caramel); font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: transform 0.3s; }
+.action-btn:hover .action-btn-arrow { transform: translateX(4px); }
+
+/* ═══════════════════════════════════════════
+   INSTAGRAM STRIP
+═══════════════════════════════════════════ */
+#instagram {
+  padding: 5rem 0;
+  background: var(--dark);
+  border-top: 1px solid var(--border-light);
+}
+.insta-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 2.5rem;
+}
+.insta-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px;
+}
+@media (max-width: 768px) { .insta-grid { grid-template-columns: repeat(3, 1fr); } }
+.insta-tile {
+  aspect-ratio: 1; overflow: hidden; cursor: none;
+  position: relative;
+}
+.insta-tile-inner {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  transition: transform 0.5s ease;
+}
+.insta-tile:hover .insta-tile-inner { transform: scale(1.08); }
+.insta-overlay {
+  position: absolute; inset: 0;
+  background: rgba(13,10,7,0.5);
+  opacity: 0; transition: opacity 0.3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.insta-tile:hover .insta-overlay { opacity: 1; }
+.insta-overlay-icon { color: var(--cream); font-size: 1.2rem; }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer {
+  background: var(--espresso);
+  border-top: 1px solid var(--border-light);
+  padding: 4rem 0 2rem;
+}
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr;
+  gap: 4rem; margin-bottom: 3rem;
+}
+@media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; gap: 2.5rem; } }
+
+.footer-brand { }
+.footer-logo {
+  font-family: 'Playfair Display', serif; font-size: 1.4rem;
+  font-weight: 700; color: var(--cream); margin-bottom: 0.8rem;
+}
+.footer-logo span { color: var(--gold); font-style: italic; }
+.footer-tagline {
+  color: var(--warm-gray); font-size: 0.85rem; line-height: 1.7;
+  max-width: 280px;
+}
+.footer-col-title {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.25em; text-transform: uppercase; color: var(--caramel);
+  margin-bottom: 1.2rem;
+}
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+.footer-links a {
+  color: var(--warm-gray); text-decoration: none; font-size: 0.85rem;
+  transition: color 0.3s;
+}
+.footer-links a:hover { color: var(--cream); }
+
+.footer-bottom {
+  border-top: 1px solid var(--border-light); padding-top: 1.5rem;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+}
+.footer-copy {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.12em; color: var(--warm-gray);
+}
+.footer-social { display: flex; gap: 1rem; }
+.footer-social a {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.12em; color: var(--warm-gray); text-decoration: none;
+  transition: color 0.3s;
+}
+.footer-social a:hover { color: var(--gold); }
+
+/* ═══════════════════════════════════════════
+   SCROLL PROGRESS BAR
+═══════════════════════════════════════════ */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 2px; z-index: 1001;
+  background: linear-gradient(90deg, var(--caramel), var(--gold));
+  width: 0%; transition: width 0.1s linear;
+}
+
+/* ═══════════════════════════════════════════
+   PARTICLES CANVAS (global floating dust)
+═══════════════════════════════════════════ */
+#particles-canvas {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE TRANSITION
+═══════════════════════════════════════════ */
+#page-transition {
+  position: fixed; inset: 0; z-index: 9990;
+  background: var(--espresso);
+  transform: scaleY(0); transform-origin: top;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- GLOBAL PARTICLES -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- MOBILE NAV OVERLAY -->
+<div id="mobile-nav">
+  <button id="mobile-nav-close">✕ Schließen</button>
+  <a href="#specialties" onclick="closeMobileNav()">Spezialitäten</a>
+  <a href="#menu" onclick="closeMobileNav()">Speisekarte</a>
+  <a href="#reservation" onclick="closeMobileNav()">Reservierung</a>
+  <a href="#gutschein" onclick="closeMobileNav()">Gutschein</a>
+  <a href="#about" onclick="closeMobileNav()">Über uns</a>
+  <a href="#kontakt" onclick="closeMobileNav()">Kontakt</a>
+</div>
+
+<!-- NAVIGATION -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">Niki's <span>Café</span></a>
+  <ul class="nav-links">
+    <li><a href="#specialties">Spezialitäten</a></li>
+    <li><a href="#menu">Speisekarte</a></li>
+    <li><a href="#about">Über uns</a></li>
+    <li><a href="#kontakt">Kontakt</a></li>
+    <li><a href="#reservation" class="nav-cta">Reservieren</a></li>
+  </ul>
+  <button class="nav-open" onclick="openMobileNav()">MENÜ</button>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow" id="hero-eyebrow">Marktplatz Offenburg</div>
+    <h1 class="hero-title" id="hero-title">
+      Niki's Café
+      <em>Genuss pur.</em>
+    </h1>
+    <p class="hero-sub" id="hero-sub">Frühstück · Crêpes · Waffeln · Matcha · Cocktails<br/>Direkt am Herzen von Offenburg</p>
+    <div class="hero-actions" id="hero-actions">
+      <a href="#reservation" class="btn-primary">Tisch reservieren</a>
+      <a href="#menu" class="btn-ghost">Speisekarte</a>
+    </div>
+  </div>
+  <div class="hero-open" id="hero-open">
+    <div class="open-dot" id="open-dot"></div>
+    <span class="open-text" id="open-text">Geöffnet · bis 20:00 Uhr</span>
+  </div>
+  <div class="scroll-hint" id="scroll-hint">
+    <div class="scroll-line"></div>
+    <span class="scroll-label">Scroll</span>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item"><span>☕</span> Hausgemachtes Eis</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥐</span> Frische Crêpes</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🧇</span> Heiße Waffeln</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🍵</span> Matcha Spezialitäten</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥂</span> Spritz & Cocktails</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥖</span> Überbackene Baguettes</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🌅</span> Frühstück bis 14:00 Uhr</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🍕</span> Badische Flammenkuchen</span>
+    <span class="ticker-dot"></span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item"><span>☕</span> Hausgemachtes Eis</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥐</span> Frische Crêpes</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🧇</span> Heiße Waffeln</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🍵</span> Matcha Spezialitäten</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥂</span> Spritz & Cocktails</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🥖</span> Überbackene Baguettes</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🌅</span> Frühstück bis 14:00 Uhr</span>
+    <span class="ticker-dot"></span>
+    <span class="ticker-item"><span>🍕</span> Badische Flammenkuchen</span>
+    <span class="ticker-dot"></span>
+  </div>
+</div>
+
+<!-- ═══════════════ SPECIALTIES ═══════════════ -->
+<section id="specialties">
+  <div class="container">
+    <span class="section-tag reveal">— Unsere Spezialitäten</span>
+    <h2 class="section-title reveal">Etwas für <em>jeden</em> Geschmack</h2>
+    <div class="rule reveal"></div>
+    <p class="section-intro reveal">Von cremigem hausgemachtem Eis bis zu hauchzarten Crêpes – bei Niki's Café wird jeder Besuch zum Genusserlebnis.</p>
+  </div>
+  <div class="container">
+    <div class="specialties-grid reveal">
+      <div class="spec-card featured">
+        <span class="spec-icon">🍦</span>
+        <div>
+          <div class="spec-name">Eisspezialitäten</div>
+          <div class="spec-desc">Hausgemachte Kreationen – Eisbecher, Waffeln mit Eis, Fruchteis und saisonale Sonderkreationen aus besten Zutaten.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Entdecken →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🥞</span>
+        <div>
+          <div class="spec-name">Crêpes & Waffeln</div>
+          <div class="spec-desc">Zart und knusprig – süß oder herzhaft, frisch für Sie zubereitet.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Zum Menü →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🥐</span>
+        <div>
+          <div class="spec-name">Croissants</div>
+          <div class="spec-desc">Butterige Croissants – pur oder als herzhafte Variante mit frischen Zutaten.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Mehr →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">☀️</span>
+        <div>
+          <div class="spec-name">Frühstück</div>
+          <div class="spec-desc">Sa., So. & Feiertags bis 14:00 Uhr. Der perfekte Start in den Tag.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Reservieren →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🍵</span>
+        <div>
+          <div class="spec-name">Matcha</div>
+          <div class="spec-desc">Matcha Latte, Matcha Eis und exklusive Matcha-Kreationen für Kenner.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Entdecken →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🥂</span>
+        <div>
+          <div class="spec-name">Spritz & Cocktails</div>
+          <div class="spec-desc">Aperol, Lillet, Limoncello und hausgemachte Cocktailkreationen.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Zur Karte →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🥖</span>
+        <div>
+          <div class="spec-name">Überbackene Baguettes</div>
+          <div class="spec-desc">Herzhafte Baguettes, frisch überbacken – der ideale Mittagssnack.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Mehr →</a>
+      </div>
+      <div class="spec-card">
+        <span class="spec-icon">🍕</span>
+        <div>
+          <div class="spec-name">Flammenkuchen</div>
+          <div class="spec-desc">Badische Flammenkuchen – knusprig dünn, nach Art des Hauses.</div>
+        </div>
+        <a href="#menu" class="spec-arrow">Entdecken →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ABOUT ═══════════════ -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text">
+        <span class="section-tag reveal">— Unser Café</span>
+        <h2 class="section-title reveal">Süße <em>Glücksmomente</em><br/>am Marktplatz</h2>
+        <div class="rule reveal"></div>
+        <blockquote class="about-quote reveal">"Mit viel Liebe und den besten Zutaten zaubern wir für Sie himmlische Köstlichkeiten."</blockquote>
+        <p class="about-body reveal">Schön, dass Sie bei uns sind! Hier dreht sich alles um süße Glücksmomente: ob cremiges Eis, süße Croissants, goldbraune Waffeln oder hauchzarte Crêpes. Dazu servieren wir eine köstliche Auswahl an Kaffeespezialitäten und feinsten persischen Kräutertee.</p>
+        <p class="about-body reveal">Genießen Sie all das in gemütlicher Atmosphäre mit einem wunderschönen Blick auf den Marktplatz von Offenburg – der perfekte Ort, um sich eine kleine Auszeit zu gönnen.</p>
+
+        <div class="hours-widget reveal">
+          <div class="hours-header">
+            <span class="hours-title">Öffnungszeiten</span>
+            <div class="hours-status">
+              <div class="status-dot" id="nav-status-dot" style="background: #7b9e6b; box-shadow: 0 0 6px #7b9e6b;"></div>
+              <span id="nav-status-text" style="color: #7b9e6b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em;">Geöffnet</span>
+            </div>
+          </div>
+          <div class="hours-rows" id="hours-rows"></div>
+        </div>
+      </div>
+
+      <div class="about-visual reveal">
+        <canvas id="about-canvas"></canvas>
+        <div class="about-card">
+          <div class="about-card-num">4.8★</div>
+          <div class="about-card-label">Google Bewertung</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MENU ═══════════════ -->
+<section id="menu">
+  <div class="container">
+    <span class="section-tag reveal">— Speisekarte</span>
+    <h2 class="section-title reveal">Unsere <em>Karte</em></h2>
+    <div class="rule reveal"></div>
+
+    <div class="menu-nav reveal" id="menu-tabs">
+      <button class="menu-tab active" data-tab="eis">🍦 Eis</button>
+      <button class="menu-tab" data-tab="crepes">🥞 Crêpes & Waffeln</button>
+      <button class="menu-tab" data-tab="fruehstueck">☀️ Frühstück</button>
+      <button class="menu-tab" data-tab="matcha">🍵 Matcha</button>
+      <button class="menu-tab" data-tab="cocktails">🥂 Cocktails</button>
+      <button class="menu-tab" data-tab="baguette">🥖 Baguettes</button>
+      <button class="menu-tab" data-tab="flamm">🍕 Flammenkuchen</button>
+    </div>
+
+    <div class="menu-panels" id="menu-panels">
+
+      <div class="menu-panel active" id="panel-eis">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a08, #1a0f05);">🍨</div><span class="menu-card-badge">Bestseller</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Eisbecher Klassik</div><div class="menu-card-desc">3 Kugeln Eis nach Wahl, Schlagsahne, Waffel und Sauce.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #0d1a0a);">🍧</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Frucht-Eisbecher</div><div class="menu-card-desc">Fruchtig-frische Kugeln mit saisonalen Früchten und Joghurt.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a08, #3d1a00);">🧁</div><span class="menu-card-badge">Neu</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Matcha-Eisbecher</div><div class="menu-card-desc">Matcha-Eis, Vanillecreme, Mochi und Matchasoße.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1a0f08, #2d1a0a);">🍦</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Waffel mit Eis</div><div class="menu-card-desc">Knusprige Waffel, 2 Kugeln Eis, Sahne und Toppings.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #3d1f0a, #1a0f08);">🍫</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Schokoladentraum</div><div class="menu-card-desc">Doppelte Schokolade, Brownies und heiße Schokosauce.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1f0d0d, #2d1515);">🍓</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Erdbeer-Sorbet</div><div class="menu-card-desc">Vegan & laktosefrei – frisches Erdbeersorbet mit Minze.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-crepes">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a08, #1a0f05);">🥞</div><span class="menu-card-badge">Beliebt</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Crêpe Nutella</div><div class="menu-card-desc">Hauchzarter Crêpe mit Nutella und frischen Bananen.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #0d1a0a);">🫐</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Crêpe Beeren</div><div class="menu-card-desc">Mit gemischten Beeren, Sahne und Puderzucker.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2d1f0a, #1a0f05);">🧇</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Heiße Waffel</div><div class="menu-card-desc">Knusprige Waffel mit Sahne, Früchten und Ahornsirup.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1a0f08, #2d1a0a);">🧀</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Herzhafter Crêpe</div><div class="menu-card-desc">Mit Käse, Schinken und frischen Kräutern.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-fruehstueck">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a08, #1a0f05);">🍳</div><span class="menu-card-badge">Sa–So</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Klassisches Frühstück</div><div class="menu-card-desc">Rührei, Toast, Aufschnitt, frisches Obst und Kaffee.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #0d1a0a);">🥑</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Avocado Toast</div><div class="menu-card-desc">Sauerteig, Avocado, Rucola und Kirschtomaten.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2d1f0a, #1a0f05);">🥐</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Croissant-Set</div><div class="menu-card-desc">Butteriges Croissant mit Confiture und frischem Kaffee.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-matcha">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #0d1a0a);">🍵</div><span class="menu-card-badge">Trend</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Matcha Latte</div><div class="menu-card-desc">Premium Ceremonial Grade Matcha mit Hafermilch.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #152a1e, #0a1d12);">🍦</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Matcha Eis</div><div class="menu-card-desc">Hausgemachtes Matcha-Eis, cremig und intensiv.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #152a1e);">🥤</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Iced Matcha</div><div class="menu-card-desc">Kalt aufgebrühter Matcha über Eis – perfekt für den Sommer.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-cocktails">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a1a, #1a0f0a);">🥂</div><span class="menu-card-badge">Sommer</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Aperol Spritz</div><div class="menu-card-desc">Klassischer Aperol Spritz – erfrischend und leicht.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1a1f2a, #0a0f1a);">🍹</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Lillet Blanc</div><div class="menu-card-desc">Mit Tonic Water, frischer Minze und Gurke.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a0a, #1a0f05);">🍋</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Limoncello Spritz</div><div class="menu-card-desc">Limoncello, Prosecco und ein Hauch Minze.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-baguette">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a08, #1a0f05);">🥖</div><span class="menu-card-badge">Beliebt</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Käse-Baguette</div><div class="menu-card-desc">Überbacken mit Emmentaler und frischen Kräutern.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1a1a, #1a0f0a);">🧄</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Knoblauch-Baguette</div><div class="menu-card-desc">Buttriges Knoblauchbaguette mit Kräuterbutter.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-panel" id="panel-flamm">
+        <div class="menu-grid">
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #2a1505, #1a0f08);">🍕</div><span class="menu-card-badge">Badisch</span></div>
+            <div class="menu-card-body"><div class="menu-card-name">Klassischer Flammkuchen</div><div class="menu-card-desc">Crème fraîche, Zwiebeln und Speck – knusprig dünn.</div></div>
+          </div>
+          <div class="menu-card reveal">
+            <div class="menu-card-img"><div class="menu-card-img-inner" style="background: linear-gradient(135deg, #1e2a15, #0d1a0a);">🌿</div></div>
+            <div class="menu-card-body"><div class="menu-card-name">Vegetarischer Flammkuchen</div><div class="menu-card-desc">Mit frischem Gemüse und Ziegenkäse.</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /menu-panels -->
+  </div>
+</section>
+
+<!-- ═══════════════ RESERVATION ═══════════════ -->
+<section id="reservation">
+  <div class="container">
+    <div class="reservation-grid">
+      <div>
+        <span class="section-tag reveal">— Reservierung</span>
+        <h2 class="section-title reveal">Ihren <em>Tisch</em> sichern</h2>
+        <div class="rule reveal"></div>
+
+        <div class="step-indicators reveal" id="step-indicators">
+          <div class="step-dot active" id="dot-1"></div>
+          <div class="step-dot" id="dot-2"></div>
+          <div class="step-dot" id="dot-3"></div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="form-step active" id="step-1">
+          <div class="step-label">Schritt 1 von 3</div>
+          <div class="step-title">Wann möchten Sie kommen?</div>
+          <div class="form-field">
+            <label>Datum</label>
+            <input type="date" id="res-date" min=""/>
+          </div>
+          <div class="form-field">
+            <label>Uhrzeit</label>
+            <select id="res-time">
+              <option value="">Uhrzeit wählen...</option>
+              <option>11:00</option><option>11:30</option>
+              <option>12:00</option><option>12:30</option>
+              <option>13:00</option><option>13:30</option>
+              <option>14:00</option><option>14:30</option>
+              <option>15:00</option><option>15:30</option>
+              <option>16:00</option><option>16:30</option>
+              <option>17:00</option><option>17:30</option>
+              <option>18:00</option><option>18:30</option>
+              <option>19:00</option>
+            </select>
+          </div>
+          <div class="step-nav">
+            <button class="btn-step btn-step-next" onclick="nextStep(1)">Weiter →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="form-step" id="step-2">
+          <div class="step-label">Schritt 2 von 3</div>
+          <div class="step-title">Wie viele Personen?</div>
+          <div class="form-field">
+            <div class="guest-selector">
+              <button class="guest-btn" onclick="changeGuests(-1)">−</button>
+              <div class="guest-count" id="guest-count">2</div>
+              <button class="guest-btn" onclick="changeGuests(1)">+</button>
+              <span style="color:var(--warm-gray); font-size:0.85rem; margin-left:0.5rem;">Personen</span>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Besondere Wünsche (optional)</label>
+            <textarea class="contact-textarea" id="res-wishes" placeholder="Allergien, Feiern, Hochstühle..."></textarea>
+          </div>
+          <div class="step-nav">
+            <button class="btn-step btn-step-prev" onclick="prevStep(2)">← Zurück</button>
+            <button class="btn-step btn-step-next" onclick="nextStep(2)">Weiter →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="form-step" id="step-3">
+          <div class="step-label">Schritt 3 von 3</div>
+          <div class="step-title">Ihre Kontaktdaten</div>
+          <div class="form-field">
+            <label>Name</label>
+            <input type="text" id="res-name" placeholder="Vorname Nachname"/>
+          </div>
+          <div class="form-field">
+            <label>Telefon</label>
+            <input type="tel" id="res-phone" placeholder="+49 ..."/>
+          </div>
+          <div class="form-field">
+            <label>E-Mail (optional)</label>
+            <input type="email" id="res-email" placeholder="ihre@email.de"/>
+          </div>
+          <div class="step-nav">
+            <button class="btn-step btn-step-prev" onclick="prevStep(3)">← Zurück</button>
+            <button class="btn-step btn-step-next" onclick="submitReservation()">Reservieren ✓</button>
+          </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="reservation-success" id="res-success">
+          <div class="success-icon">☕</div>
+          <div class="success-title">Reservierung eingegangen!</div>
+          <p class="success-sub">Wir freuen uns auf Sie! Eine Bestätigung erhalten Sie in Kürze. Bei Fragen: <a href="tel:+4978125081624" style="color:var(--gold)">0781-25081624</a></p>
+        </div>
+      </div>
+
+      <div class="reservation-visual reveal">
+        <canvas id="reservation-canvas"></canvas>
+        <div class="review-strip" style="margin-top:1.5rem;">
+          <div class="review-track" id="review-track">
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Absolut wunderbar! Die Crêpes sind ein Traum. Wir kommen immer wieder."</div><div class="review-author">— Maria K., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Toller Blick auf den Marktplatz, freundliches Personal und leckeres Eis!"</div><div class="review-author">— Thomas B., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Bestes Frühstück in Offenburg! Der Matcha Latte ist unglaublich gut."</div><div class="review-author">— Sarah M., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Gemütliche Atmosphäre, top Service und die Cocktails sind sensationell."</div><div class="review-author">— Peter L., Google</div></div>
+            <!-- duplicates for loop -->
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Absolut wunderbar! Die Crêpes sind ein Traum. Wir kommen immer wieder."</div><div class="review-author">— Maria K., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Toller Blick auf den Marktplatz, freundliches Personal und leckeres Eis!"</div><div class="review-author">— Thomas B., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Bestes Frühstück in Offenburg! Der Matcha Latte ist unglaublich gut."</div><div class="review-author">— Sarah M., Google</div></div>
+            <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Gemütliche Atmosphäre, top Service und die Cocktails sind sensationell."</div><div class="review-author">— Peter L., Google</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ GIFT CARD ═══════════════ -->
+<section id="gutschein">
+  <div class="container">
+    <div class="gift-grid">
+      <div>
+        <span class="section-tag reveal">— Gutscheine</span>
+        <h2 class="section-title reveal">Süße <em>Freude</em><br/>verschenken</h2>
+        <div class="rule reveal"></div>
+        <p class="section-intro reveal">Der perfekte Anlass ist jetzt. Verschenken Sie unvergessliche Momente im Niki's Café.</p>
+
+        <div class="reveal">
+          <p style="font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; color:var(--caramel); text-transform:uppercase; margin-bottom:0.8rem;">Betrag wählen</p>
+          <div class="amount-grid" id="amount-grid">
+            <button class="amount-btn selected" onclick="selectAmount(this, 10)">10 €</button>
+            <button class="amount-btn" onclick="selectAmount(this, 25)">25 €</button>
+            <button class="amount-btn" onclick="selectAmount(this, 50)">50 €</button>
+            <button class="amount-btn" onclick="selectAmount(this, 75)">75 €</button>
+            <button class="amount-btn" onclick="selectAmount(this, 100)">100 €</button>
+            <button class="amount-btn" onclick="selectAmount(this, 'other')">Anderer</button>
+          </div>
+
+          <div class="form-field" style="margin-top:1rem;">
+            <label>Widmung (wird auf dem Gutschein gedruckt)</label>
+            <input type="text" id="card-message" placeholder="z.B. Herzlichen Glückwunsch, Maria!" oninput="updateCardMessage(this.value)"/>
+          </div>
+
+          <a href="mailto:info@nikis.cafe?subject=Gutschein Anfrage" class="btn-primary" style="display:inline-block; margin-top:0.5rem;">Gutschein anfragen →</a>
+
+          <div class="trust-pills" style="margin-top:1.5rem;">
+            <div class="trust-pill">✓ Sofort verfügbar</div>
+            <div class="trust-pill">✓ Einlösbar vor Ort</div>
+            <div class="trust-pill">✓ Kein Ablaufdatum</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="card-scene">
+          <div class="gift-card-3d" id="gift-card" onmousemove="tiltCard(event)" onmouseleave="resetCard()">
+            <div class="card-face">
+              <div class="card-shine"></div>
+              <div class="card-logo-3d">Niki's <span>Café</span></div>
+              <div class="card-amount-display" id="card-amount-display">10 €</div>
+              <div class="card-bottom">
+                <div>
+                  <div class="card-tag">Geschenkgutschein</div>
+                  <div style="color:var(--warm-gray); font-size:0.72rem; margin-top:0.2rem; font-family:'DM Sans',sans-serif;" id="card-msg-display">Herzlichen Glückwunsch!</div>
+                </div>
+                <div class="card-tag">Offenburg · Marktplatz</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ INSTAGRAM ═══════════════ -->
+<section id="instagram">
+  <div class="container">
+    <div class="insta-header reveal">
+      <div>
+        <span class="section-tag">— Instagram</span>
+        <h3 style="font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--cream);">Folgen Sie <em style="color:var(--gold); font-style:italic;">uns</em></h3>
+      </div>
+      <a href="https://www.instagram.com/nikis_cafe_og" target="_blank" class="btn-ghost" style="font-size:0.6rem; padding:0.6rem 1.2rem;">@nikis_cafe_og →</a>
+    </div>
+    <div class="insta-grid reveal">
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#2a1a08,#1a0f05);">🍦</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 284</div></div></div>
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#152a15,#0d1a0a);">🍵</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 412</div></div></div>
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#2a1a1a,#1a0f0a);">🥂</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 193</div></div></div>
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#2a2015,#1a150a);">🥐</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 337</div></div></div>
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#1a0f08,#2d1a0a);">🥞</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 509</div></div></div>
+      <div class="insta-tile"><div class="insta-tile-inner" style="background:linear-gradient(135deg,#1f1a2a,#0f0a1a);">🍕</div><div class="insta-overlay"><div class="insta-overlay-icon">♡ 271</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CONTACT ═══════════════ -->
+<section id="kontakt">
+  <div class="container">
+    <span class="section-tag reveal">— Kontakt & Anfahrt</span>
+    <h2 class="section-title reveal">Finden Sie <em>uns</em></h2>
+    <div class="rule reveal"></div>
+    <div class="contact-grid">
+      <div>
+        <div class="map-scene reveal">
+          <canvas id="map-canvas" style="width:100%;height:100%;"></canvas>
+          <div class="map-pin">
+            <div class="map-pin-dot"></div>
+            <div class="map-pin-label">Niki's Café</div>
+          </div>
+        </div>
+
+        <div class="contact-info-grid reveal">
+          <div class="contact-block">
+            <div class="contact-block-label">Adresse</div>
+            <div class="contact-block-value">Kreuzkirchstr. 6<br/>77652 Offenburg</div>
+          </div>
+          <div class="contact-block">
+            <div class="contact-block-label">Telefon</div>
+            <div class="contact-block-value"><a href="tel:+4978125081624">0781-25081624</a></div>
+          </div>
+          <div class="contact-block">
+            <div class="contact-block-label">E-Mail</div>
+            <div class="contact-block-value"><a href="mailto:info@nikis.cafe">info@nikis.cafe</a></div>
+          </div>
+          <div class="contact-block">
+            <div class="contact-block-label">Instagram</div>
+            <div class="contact-block-value"><a href="https://www.instagram.com/nikis_cafe_og" target="_blank">@nikis_cafe_og</a></div>
+          </div>
+        </div>
+
+        <div class="action-buttons reveal" style="margin-top:1.5rem;">
+          <a href="tel:+4978125081624" class="action-btn">
+            <span class="action-btn-icon">📞</span>
+            <span class="action-btn-text"><strong>Anrufen</strong><br/><span style="font-size:0.78rem;color:var(--warm-gray);">0781-25081624</span></span>
+            <span class="action-btn-arrow">→</span>
+          </a>
+          <a href="https://maps.google.com/?q=Kreuzkirchstr.+6,+77652+Offenburg" target="_blank" class="action-btn">
+            <span class="action-btn-icon">📍</span>
+            <span class="action-btn-text"><strong>Route planen</strong><br/><span style="font-size:0.78rem;color:var(--warm-gray);">Google Maps öffnen</span></span>
+            <span class="action-btn-arrow">→</span>
+          </a>
+          <a href="mailto:info@nikis.cafe" class="action-btn">
+            <span class="action-btn-icon">✉️</span>
+            <span class="action-btn-text"><strong>E-Mail schreiben</strong><br/><span style="font-size:0.78rem;color:var(--warm-gray);">info@nikis.cafe</span></span>
+            <span class="action-btn-arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:2.5rem;" class="reveal">
+          <h3 style="font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--cream); margin-bottom:1.5rem;">Nachricht senden</h3>
+          <div class="form-field">
+            <label>Name</label>
+            <input type="text" placeholder="Ihr Name" id="contact-name"/>
+          </div>
+          <div class="form-field">
+            <label>E-Mail</label>
+            <input type="email" placeholder="ihre@email.de" id="contact-email"/>
+          </div>
+          <div class="form-field">
+            <label>Nachricht</label>
+            <textarea class="contact-textarea" placeholder="Ihre Nachricht..." id="contact-message"></textarea>
+          </div>
+          <button class="btn-primary" onclick="sendContactForm()" style="width:100%;">Senden →</button>
+        </div>
+
+        <div class="reveal" style="border:1px solid var(--border); border-radius:3px; padding:1.5rem; text-align:center; background: rgba(200,131,42,0.04);">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">⭐</div>
+          <div style="font-family:'Playfair Display',serif; font-size:1rem; color:var(--cream); margin-bottom:0.3rem;">Waren Sie bei uns?</div>
+          <p style="font-size:0.82rem; color:var(--warm-gray); margin-bottom:1rem;">Ihre Meinung bedeutet uns viel.</p>
+          <a href="https://maps.google.com/search/Nikis+Café+Offenburg" target="_blank" class="btn-ghost" style="font-size:0.6rem; padding:0.6rem 1.4rem;">Google-Bewertung hinterlassen ★</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">Niki's <span>Café</span></div>
+        <p class="footer-tagline">Ihr gemütliches Café direkt am Marktplatz in Offenburg – für Frühstück, süße Momente und gesellige Abende.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="#specialties">Spezialitäten</a></li>
+          <li><a href="#menu">Speisekarte</a></li>
+          <li><a href="#reservation">Reservierung</a></li>
+          <li><a href="#gutschein">Gutschein</a></li>
+          <li><a href="#about">Über uns</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Öffnungszeiten</div>
+        <ul class="footer-links" style="gap:0.4rem;">
+          <li style="color:var(--warm-gray); font-size:0.82rem;">Mo–Do: 11:00–20:00</li>
+          <li style="color:var(--warm-gray); font-size:0.82rem;">Fr: 11:00–21:00</li>
+          <li style="color:var(--warm-gray); font-size:0.82rem;">Sa: 10:00–21:00</li>
+          <li style="color:var(--warm-gray); font-size:0.82rem;">So: 10:00–19:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Niki's Café GbR · Kreuzkirchstr. 6 · 77652 Offenburg · <a href="mailto:info@nikis.cafe" style="color:inherit; text-decoration:none;">Impressum</a></div>
+      <div class="footer-social">
+        <a href="https://www.instagram.com/nikis_cafe_og" target="_blank">Instagram</a>
+        <a href="tel:+4978125081624">Anrufen</a>
+        <a href="#reservation">Reservieren</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- STICKY MOBILE CTA -->
+<div id="sticky-cta">
+  <a href="#reservation" class="sticky-primary">🍽 Reservieren</a>
+  <a href="tel:+4978125081624" class="sticky-secondary">📞 Anrufen</a>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// GSAP REGISTRATION
+// ═══════════════════════════════════════════
+gsap.registerPlugin(ScrollTrigger);
+
+// ═══════════════════════════════════════════
+// CUSTOM CURSOR
+// ═══════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let cx = window.innerWidth/2, cy = window.innerHeight/2;
+let rx = cx, ry = cy;
+
+document.addEventListener('mousemove', e => {
+  cx = e.clientX; cy = e.clientY;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+});
+
+function animateCursorRing() {
+  rx += (cx - rx) * 0.12;
+  ry += (cy - ry) * 0.12;
+  cursorRing.style.left = rx + 'px';
+  cursorRing.style.top = ry + 'px';
+  requestAnimationFrame(animateCursorRing);
+}
+animateCursorRing();
+
+document.querySelectorAll('a, button, .spec-card, .menu-card, .insta-tile').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+});
+
+// ═══════════════════════════════════════════
+// NAVBAR SCROLL
+// ═══════════════════════════════════════════
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 60) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+
+  // PROGRESS BAR
+  const max = document.body.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (window.scrollY / max * 100) + '%';
+});
+
+// ═══════════════════════════════════════════
+// MOBILE NAV
+// ═══════════════════════════════════════════
+function openMobileNav() { document.getElementById('mobile-nav').classList.add('open'); }
+function closeMobileNav() { document.getElementById('mobile-nav').classList.remove('open'); }
+document.getElementById('mobile-nav-close').onclick = closeMobileNav;
+
+// ═══════════════════════════════════════════
+// HERO INTRO ANIMATIONS
+// ═══════════════════════════════════════════
+window.addEventListener('load', () => {
+  const tl = gsap.timeline({ delay: 0.3 });
+  tl.to('#hero-eyebrow', { opacity:1, y:0, duration:0.8, ease:'power3.out' })
+    .to('#hero-title', { opacity:1, y:0, duration:1, ease:'power3.out' }, '-=0.5')
+    .to('#hero-sub', { opacity:1, y:0, duration:0.8, ease:'power3.out' }, '-=0.6')
+    .to('#hero-actions', { opacity:1, y:0, duration:0.8, ease:'power3.out' }, '-=0.5')
+    .to('#hero-open', { opacity:1, duration:0.6 }, '-=0.3')
+    .to('#scroll-hint', { opacity:1, duration:0.6 }, '-=0.3');
+});
+
+// ═══════════════════════════════════════════
+// SCROLL REVEAL
+// ═══════════════════════════════════════════
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+revealEls.forEach(el => observer.observe(el));
+
+// ═══════════════════════════════════════════
+// OPENING HOURS LOGIC
+// ═══════════════════════════════════════════
+const hoursData = [
+  { day:'Montag', open:'11:00', close:'20:00' },
+  { day:'Dienstag', open:'11:00', close:'20:00' },
+  { day:'Mittwoch', open:'11:00', close:'20:00' },
+  { day:'Donnerstag', open:'11:00', close:'20:00' },
+  { day:'Freitag', open:'11:00', close:'21:00' },
+  { day:'Samstag', open:'10:00', close:'21:00' },
+  { day:'Sonntag', open:'10:00', close:'19:00' },
+];
+
+function buildHoursWidget() {
+  const now = new Date();
+  const todayIdx = (now.getDay() + 6) % 7; // Mon=0
+  const currentMin = now.getHours()*60 + now.getMinutes();
+
+  const rows = document.getElementById('hours-rows');
+  if (!rows) return;
+  rows.innerHTML = '';
+
+  hoursData.forEach((h, i) => {
+    const row = document.createElement('div');
+    row.className = 'hours-row' + (i === todayIdx ? ' today' : '');
+    const [oh, om] = h.open.split(':').map(Number);
+    const [ch, cm] = h.close.split(':').map(Number);
+    row.innerHTML = `<span class="day-name">${h.day}</span><span class="hours-time">${h.open} – ${h.close}</span>`;
+    rows.appendChild(row);
+  });
+
+  // Check if open now
+  const td = hoursData[todayIdx];
+  const [oh, om] = td.open.split(':').map(Number);
+  const [ch, cm] = td.close.split(':').map(Number);
+  const openMin = oh*60+om, closeMin = ch*60+cm;
+  const isOpen = currentMin >= openMin && currentMin < closeMin;
+
+  const dot = document.getElementById('open-dot');
+  const txt = document.getElementById('open-text');
+  const navDot = document.getElementById('nav-status-dot');
+  const navTxt = document.getElementById('nav-status-text');
+
+  if (isOpen) {
+    [dot, navDot].forEach(d => { d.classList.remove('closed'); d.style.background = '#7b9e6b'; d.style.boxShadow = '0 0 10px #7b9e6b'; });
+    if (txt) txt.textContent = `Geöffnet · bis ${td.close} Uhr`;
+    if (navTxt) { navTxt.textContent = 'Geöffnet'; navTxt.style.color = '#7b9e6b'; }
+  } else {
+    [dot, navDot].forEach(d => { d.classList.add('closed'); d.style.background = '#d4756b'; d.style.boxShadow = '0 0 10px #d4756b'; });
+    if (txt) txt.textContent = `Geschlossen · Öffnet ${td.open} Uhr`;
+    if (navTxt) { navTxt.textContent = 'Geschlossen'; navTxt.style.color = '#d4756b'; }
+  }
+}
+buildHoursWidget();
+
+// Set min date for reservation
+const resDate = document.getElementById('res-date');
+if (resDate) {
+  const today = new Date().toISOString().split('T')[0];
+  resDate.min = today;
+  resDate.value = today;
+}
+
+// ═══════════════════════════════════════════
+// THREE.JS HERO SCENE
+// ═══════════════════════════════════════════
+(function initHero() {
+  const canvas = document.getElementById('hero-canvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, canvas.offsetWidth/canvas.offsetHeight, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  // COFFEE CUP GEOMETRY
+  const cupGeom = new THREE.CylinderGeometry(0.35, 0.28, 0.55, 32, 1, true);
+  const cupMat = new THREE.MeshPhongMaterial({ color:0x2a1a08, side:THREE.DoubleSide, shininess:40 });
+  const cup = new THREE.Mesh(cupGeom, cupMat);
+  cup.position.set(0, -0.3, 0);
+  scene.add(cup);
+
+  // Cup bottom
+  const baseGeom = new THREE.CylinderGeometry(0.28, 0.28, 0.04, 32);
+  const base = new THREE.Mesh(baseGeom, new THREE.MeshPhongMaterial({ color:0x2a1a08, shininess:20 }));
+  base.position.set(0, -0.57, 0);
+  scene.add(base);
+
+  // Coffee surface (dark circle)
+  const coffeeGeom = new THREE.CircleGeometry(0.33, 32);
+  const coffeeMat = new THREE.MeshPhongMaterial({ color:0x1a0a03, shininess:80 });
+  const coffee = new THREE.Mesh(coffeeGeom, coffeeMat);
+  coffee.rotation.x = -Math.PI/2;
+  coffee.position.set(0, -0.04, 0);
+  scene.add(coffee);
+
+  // Saucer
+  const saucerGeom = new THREE.CylinderGeometry(0.55, 0.5, 0.06, 32);
+  const saucer = new THREE.Mesh(saucerGeom, new THREE.MeshPhongMaterial({ color:0x3a2515, shininess:60 }));
+  saucer.position.set(0, -0.65, 0);
+  scene.add(saucer);
+
+  // Handle
+  const handleCurve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(0.35, -0.15, 0),
+    new THREE.Vector3(0.65, -0.15, 0),
+    new THREE.Vector3(0.35, -0.45, 0)
+  );
+  const handleGeom = new THREE.TubeGeometry(handleCurve, 20, 0.04, 8, false);
+  const handle = new THREE.Mesh(handleGeom, new THREE.MeshPhongMaterial({ color:0x2a1a08 }));
+  scene.add(handle);
+
+  // Croissant (torus)
+  const crGeom = new THREE.TorusGeometry(0.35, 0.12, 8, 20, Math.PI);
+  const crMat = new THREE.MeshPhongMaterial({ color:0xc8832a, shininess:20 });
+  const croissant = new THREE.Mesh(crGeom, crMat);
+  croissant.position.set(1.4, -0.5, 0.5);
+  croissant.rotation.z = 0.3;
+  croissant.rotation.y = -0.5;
+  scene.add(croissant);
+
+  // Matcha cup (small)
+  const matchaCupG = new THREE.CylinderGeometry(0.22, 0.18, 0.4, 24, 1, true);
+  const matchaCup = new THREE.Mesh(matchaCupG, new THREE.MeshPhongMaterial({ color:0x3a2a1a, side:THREE.DoubleSide }));
+  matchaCup.position.set(-1.6, -0.4, 0.3);
+  scene.add(matchaCup);
+  const matchaSurf = new THREE.Mesh(new THREE.CircleGeometry(0.21, 24), new THREE.MeshPhongMaterial({ color:0x4a7a3a }));
+  matchaSurf.rotation.x = -Math.PI/2;
+  matchaSurf.position.set(-1.6, -0.21, 0.3);
+  scene.add(matchaSurf);
+
+  // STEAM PARTICLES
+  const steamCount = 120;
+  const steamPos = new Float32Array(steamCount * 3);
+  const steamPhases = new Float32Array(steamCount);
+  for (let i=0; i<steamCount; i++) {
+    steamPos[i*3] = (Math.random()-0.5)*0.3;
+    steamPos[i*3+1] = Math.random()*2;
+    steamPos[i*3+2] = (Math.random()-0.5)*0.3;
+    steamPhases[i] = Math.random()*Math.PI*2;
+  }
+  const steamGeom = new THREE.BufferGeometry();
+  steamGeom.setAttribute('position', new THREE.BufferAttribute(steamPos, 3));
+  const steamMat = new THREE.PointsMaterial({ color:0xfdf6ec, size:0.04, transparent:true, opacity:0.4, sizeAttenuation:true });
+  const steam = new THREE.Points(steamGeom, steamMat);
+  steam.position.set(0, -0.04, 0);
+  scene.add(steam);
+
+  // FLOATING DUST PARTICLES
+  const dustCount = 200;
+  const dustPos = new Float32Array(dustCount * 3);
+  for (let i=0; i<dustCount; i++) {
+    dustPos[i*3] = (Math.random()-0.5)*12;
+    dustPos[i*3+1] = (Math.random()-0.5)*8;
+    dustPos[i*3+2] = (Math.random()-0.5)*6;
+  }
+  const dustGeom = new THREE.BufferGeometry();
+  dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustMat = new THREE.PointsMaterial({ color:0xe8b84b, size:0.03, transparent:true, opacity:0.35, sizeAttenuation:true });
+  const dust = new THREE.Points(dustGeom, dustMat);
+  scene.add(dust);
+
+  // LIGHTS
+  const ambient = new THREE.AmbientLight(0xfdf6ec, 0.4);
+  scene.add(ambient);
+  const warm = new THREE.PointLight(0xe8b84b, 2, 10);
+  warm.position.set(2, 3, 2);
+  scene.add(warm);
+  const fill = new THREE.PointLight(0xc8832a, 1, 8);
+  fill.position.set(-3, -1, 1);
+  scene.add(fill);
+  const cool = new THREE.PointLight(0x7b9e6b, 0.5, 8);
+  cool.position.set(0, -3, 3);
+  scene.add(cool);
+
+  // MOUSE PARALLAX
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX/window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY/window.innerHeight - 0.5) * 2;
+  });
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.01;
+
+    // Cup gentle float
+    cup.position.y = -0.3 + Math.sin(t*0.8)*0.04;
+    base.position.y = -0.57 + Math.sin(t*0.8)*0.04;
+    coffee.position.y = -0.04 + Math.sin(t*0.8)*0.04;
+    saucer.position.y = -0.65 + Math.sin(t*0.8)*0.04;
+    handle.position.y = Math.sin(t*0.8)*0.04;
+    steam.position.y = -0.04 + Math.sin(t*0.8)*0.04;
+
+    // Croissant rotate
+    croissant.rotation.y += 0.005;
+    croissant.position.y = -0.5 + Math.sin(t*0.6+1)*0.06;
+
+    // Matcha cup float
+    matchaCup.position.y = -0.4 + Math.sin(t*0.7+2)*0.05;
+    matchaSurf.position.y = -0.21 + Math.sin(t*0.7+2)*0.05;
+
+    // Steam animation
+    const steamPositions = steamGeom.attributes.position.array;
+    for (let i=0; i<steamCount; i++) {
+      steamPositions[i*3+1] += 0.012;
+      steamPositions[i*3] += Math.sin(t+steamPhases[i])*0.002;
+      if (steamPositions[i*3+1] > 2) {
+        steamPositions[i*3+1] = 0;
+        steamPositions[i*3] = (Math.random()-0.5)*0.3;
+      }
+    }
+    steamGeom.attributes.position.needsUpdate = true;
+    steamMat.opacity = 0.3 + Math.sin(t)*0.1;
+
+    // Dust slow drift
+    const dustPositions = dustGeom.attributes.position.array;
+    for (let i=0; i<dustCount; i++) {
+      dustPositions[i*3+1] += 0.002;
+      if (dustPositions[i*3+1] > 4) dustPositions[i*3+1] = -4;
+    }
+    dustGeom.attributes.position.needsUpdate = true;
+
+    // Camera parallax
+    camera.position.x += (mouseX * 0.4 - camera.position.x) * 0.05;
+    camera.position.y += (-mouseY * 0.2 - camera.position.y) * 0.05;
+    camera.lookAt(0, -0.2, 0);
+
+    // Warm light pulse
+    warm.intensity = 1.8 + Math.sin(t*1.5)*0.3;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+
+// ═══════════════════════════════════════════
+// THREE.JS ABOUT SCENE (rotating rings)
+// ═══════════════════════════════════════════
+(function initAbout() {
+  const canvas = document.getElementById('about-canvas');
+  if (!canvas) return;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.z = 4;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  function resize() {
+    const w = canvas.parentElement.offsetWidth;
+    const h = Math.min(canvas.parentElement.offsetHeight, 500);
+    renderer.setSize(w, h);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Main sphere (café)
+  const sphereG = new THREE.SphereGeometry(1, 32, 32);
+  const sphereM = new THREE.MeshPhongMaterial({ color:0x2a1a08, wireframe:false, transparent:true, opacity:0.9, shininess:60 });
+  const sphere = new THREE.Mesh(sphereG, sphereM);
+  scene.add(sphere);
+
+  // Wireframe overlay
+  const wireM = new THREE.MeshBasicMaterial({ color:0xc8832a, wireframe:true, transparent:true, opacity:0.1 });
+  const wire = new THREE.Mesh(new THREE.SphereGeometry(1.01, 16, 16), wireM);
+  scene.add(wire);
+
+  // Orbiting rings
+  const rings = [];
+  [1.5, 1.8, 2.2].forEach((r, i) => {
+    const rG = new THREE.TorusGeometry(r, 0.015, 8, 64);
+    const rM = new THREE.MeshBasicMaterial({ color:[0xe8b84b, 0xc8832a, 0x7b9e6b][i], transparent:true, opacity: [0.6,0.4,0.3][i] });
+    const ring = new THREE.Mesh(rG, rM);
+    ring.rotation.x = [0.5, 1.2, 0.2][i];
+    ring.rotation.y = [0.3, 0.8, 1.5][i];
+    rings.push(ring);
+    scene.add(ring);
+  });
+
+  // Orbiting particles
+  const orbitCount = 80;
+  const orbitPos = new Float32Array(orbitCount*3);
+  for (let i=0; i<orbitCount; i++) {
+    const theta = (i/orbitCount)*Math.PI*2;
+    const r = 1.5 + Math.random()*0.8;
+    orbitPos[i*3] = Math.cos(theta)*r;
+    orbitPos[i*3+1] = (Math.random()-0.5)*2;
+    orbitPos[i*3+2] = Math.sin(theta)*r;
+  }
+  const orbitG = new THREE.BufferGeometry();
+  orbitG.setAttribute('position', new THREE.BufferAttribute(orbitPos, 3));
+  const orbitM = new THREE.PointsMaterial({ color:0xe8b84b, size:0.05, transparent:true, opacity:0.7 });
+  scene.add(new THREE.Points(orbitG, orbitM));
+
+  scene.add(new THREE.AmbientLight(0xfdf6ec, 0.5));
+  const pl = new THREE.PointLight(0xe8b84b, 2, 10);
+  pl.position.set(3, 3, 3);
+  scene.add(pl);
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.008;
+    sphere.rotation.y = t*0.3;
+    wire.rotation.y = -t*0.2;
+    rings[0].rotation.z = t*0.5;
+    rings[1].rotation.x = 1.2 + t*0.3;
+    rings[2].rotation.y = 1.5 + t*0.4;
+    pl.intensity = 1.8 + Math.sin(t)*0.4;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ═══════════════════════════════════════════
+// THREE.JS RESERVATION SCENE (table view)
+// ═══════════════════════════════════════════
+(function initReservation() {
+  const canvas = document.getElementById('reservation-canvas');
+  if (!canvas) return;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, canvas.offsetWidth/canvas.offsetHeight, 0.1, 50);
+  camera.position.set(0, 2, 5);
+  camera.lookAt(0, 0, 0);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  // TABLE
+  const tableTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.2, 1.2, 0.08, 32),
+    new THREE.MeshPhongMaterial({ color:0x3a2010, shininess:80 })
+  );
+  scene.add(tableTop);
+  const tableLeg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, 1.2, 12),
+    new THREE.MeshPhongMaterial({ color:0x2a1808 })
+  );
+  tableLeg.position.y = -0.64;
+  scene.add(tableLeg);
+
+  // TINY CUPS ON TABLE
+  [[-0.5, 0, 0.3], [0.5, 0, -0.2]].forEach(([x,y,z]) => {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.2, 16, 1, true), new THREE.MeshPhongMaterial({ color:0x2a1a08, side:THREE.DoubleSide }));
+    c.position.set(x, 0.14, z);
+    scene.add(c);
+    const s = new THREE.Mesh(new THREE.CircleGeometry(0.11, 16), new THREE.MeshPhongMaterial({ color:0x1a0a03 }));
+    s.rotation.x = -Math.PI/2;
+    s.position.set(x, 0.24, z);
+    scene.add(s);
+  });
+
+  // CANDLE
+  const candleG = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 12);
+  const candle = new THREE.Mesh(candleG, new THREE.MeshPhongMaterial({ color:0xfdf6ec }));
+  candle.position.set(0, 0.24, 0);
+  scene.add(candle);
+  const flameLight = new THREE.PointLight(0xffa040, 1.5, 3);
+  flameLight.position.set(0, 0.55, 0);
+  scene.add(flameLight);
+
+  // AMBIENT
+  scene.add(new THREE.AmbientLight(0x2a1a08, 0.8));
+  const pl = new THREE.PointLight(0xe8b84b, 1, 12);
+  pl.position.set(3, 4, 3);
+  scene.add(pl);
+
+  // BACKGROUND PARTICLES (café atmosphere)
+  const atmoCount = 150;
+  const atmoPos = new Float32Array(atmoCount*3);
+  for (let i=0; i<atmoCount; i++) {
+    atmoPos[i*3] = (Math.random()-0.5)*10;
+    atmoPos[i*3+1] = (Math.random()-0.5)*8;
+    atmoPos[i*3+2] = (Math.random()-0.5)*10;
+  }
+  const atmoG = new THREE.BufferGeometry();
+  atmoG.setAttribute('position', new THREE.BufferAttribute(atmoPos, 3));
+  scene.add(new THREE.Points(atmoG, new THREE.PointsMaterial({ color:0xe8b84b, size:0.04, transparent:true, opacity:0.3 })));
+
+  let t=0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.015;
+    flameLight.intensity = 1.2 + Math.sin(t*3)*0.4 + Math.sin(t*5.3)*0.2;
+    flameLight.position.x = Math.sin(t*2)*0.02;
+    camera.position.x = Math.sin(t*0.3)*0.4;
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+
+// ═══════════════════════════════════════════
+// MAP CANVAS (isometric city blocks)
+// ═══════════════════════════════════════════
+(function initMap() {
+  const canvas = document.getElementById('map-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = canvas.offsetWidth; h = canvas.offsetHeight;
+    canvas.width = w * window.devicePixelRatio;
+    canvas.height = h * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    draw();
+  }
+
+  function isoProject(x, y, z) {
+    return {
+      sx: w/2 + (x - z) * 30,
+      sy: h/2 + (x + z) * 15 - y * 25
+    };
+  }
+
+  function drawBlock(gx, gz, height, color, highlight) {
+    const top = isoProject(gx, height, gz);
+    const tl = isoProject(gx-0.5, height, gz-0.5);
+    const tr = isoProject(gx+0.5, height, gz-0.5);
+    const br = isoProject(gx+0.5, height, gz+0.5);
+    const bl = isoProject(gx-0.5, height, gz+0.5);
+    const bl0 = isoProject(gx-0.5, 0, gz+0.5);
+    const br0 = isoProject(gx+0.5, 0, gz+0.5);
+    const tl0 = isoProject(gx-0.5, 0, gz-0.5);
+    const tr0 = isoProject(gx+0.5, 0, gz-0.5);
+
+    // left face
+    ctx.beginPath();
+    ctx.moveTo(tl.sx, tl.sy);
+    ctx.lineTo(bl.sx, bl.sy);
+    ctx.lineTo(bl0.sx, bl0.sy);
+    ctx.lineTo(tl0.sx, tl0.sy);
+    ctx.closePath();
+    ctx.fillStyle = highlight ? 'rgba(200,131,42,0.15)' : 'rgba(200,131,42,0.06)';
+    ctx.fill();
+
+    // right face
+    ctx.beginPath();
+    ctx.moveTo(br.sx, br.sy);
+    ctx.lineTo(bl.sx, bl.sy);
+    ctx.lineTo(bl0.sx, bl0.sy);
+    ctx.lineTo(br0.sx, br0.sy);
+    ctx.closePath();
+    ctx.fillStyle = highlight ? 'rgba(200,131,42,0.1)' : 'rgba(200,131,42,0.04)';
+    ctx.fill();
+
+    // top face
+    ctx.beginPath();
+    ctx.moveTo(tl.sx, tl.sy);
+    ctx.lineTo(top.sx, top.sy);
+    ctx.lineTo(tr.sx, tr.sy);
+    ctx.lineTo(br.sx, br.sy);
+    ctx.lineTo(bl.sx, bl.sy);
+    ctx.closePath();
+    ctx.fillStyle = highlight ? 'rgba(200,131,42,0.25)' : color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,131,42,0.2)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid of blocks
+    const blocks = [
+      [-2,-2,0.5],[2,-2,0.8],[-2,2,0.6],[2,2,0.4],
+      [-1,-2,0.3],[0,-2,0.4],[1,-2,0.5],
+      [-2,-1,0.7],[-2,0,0.4],[-2,1,0.6],
+      [2,-1,0.5],[2,0,0.3],[2,1,0.7],
+      [-1,2,0.4],[0,2,0.5],[1,2,0.6],
+      // Café block (center highlighted)
+      [0,0,1.2],
+      [-1,0,0.5],[1,0,0.6],[0,-1,0.4],[0,1,0.5],
+      [-1,-1,0.3],[1,-1,0.4],[-1,1,0.6],[1,1,0.3],
+    ];
+
+    blocks.forEach(([gx,gz,h_]) => {
+      const isCafe = gx===0 && gz===0;
+      const col = isCafe ? 'rgba(200,131,42,0.25)' : 'rgba(255,255,255,0.05)';
+      drawBlock(gx, gz, h_ + (isCafe ? Math.sin(t)*0.05 : 0), col, isCafe);
+    });
+
+    // Roads
+    ctx.globalAlpha = 0.15;
+    for (let i=-3; i<=3; i++) {
+      const a = isoProject(i, 0, -3);
+      const b = isoProject(i, 0, 3);
+      ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy);
+      ctx.strokeStyle = '#c8832a'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    for (let i=-3; i<=3; i++) {
+      const a = isoProject(-3, 0, i);
+      const b = isoProject(3, 0, i);
+      ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    t += 0.02;
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  function loop() { draw(); requestAnimationFrame(loop); }
+  loop();
+})();
+
+// ═══════════════════════════════════════════
+// GLOBAL DUST PARTICLES (2D canvas overlay)
+// ═══════════════════════════════════════════
+(function initDust() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i=0; i<60; i++) {
+    particles.push({
+      x: Math.random()*window.innerWidth,
+      y: Math.random()*window.innerHeight,
+      r: Math.random()*1.5 + 0.5,
+      vx: (Math.random()-0.5)*0.3,
+      vy: -Math.random()*0.4-0.1,
+      o: Math.random()*0.3+0.05,
+      phase: Math.random()*Math.PI*2
+    });
+  }
+
+  let t = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t += 0.01;
+    particles.forEach(p => {
+      p.x += p.vx + Math.sin(t+p.phase)*0.2;
+      p.y += p.vy;
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random()*canvas.width; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(232,184,75,${p.o * (0.7+Math.sin(t+p.phase)*0.3)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ═══════════════════════════════════════════
+// MENU TABS
+// ═══════════════════════════════════════════
+document.querySelectorAll('.menu-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    const panel = document.getElementById('panel-' + this.dataset.tab);
+    if (panel) {
+      panel.classList.add('active');
+      // Trigger reveals in new panel
+      panel.querySelectorAll('.reveal').forEach(el => {
+        el.classList.remove('visible');
+        setTimeout(() => observer.observe(el), 10);
+      });
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+// MULTI-STEP RESERVATION FORM
+// ═══════════════════════════════════════════
+let currentStep = 1, guests = 2;
+
+function nextStep(from) {
+  if (from === 1) {
+    const date = document.getElementById('res-date').value;
+    const time = document.getElementById('res-time').value;
+    if (!date || !time) { shakeField(time ? 'res-date' : 'res-time'); return; }
+  }
+  if (from === 3) { submitReservation(); return; }
+  goToStep(from + 1);
+}
+
+function prevStep(from) { goToStep(from - 1); }
+
+function goToStep(n) {
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  currentStep = n;
+  document.getElementById(`step-${n}`).classList.add('active');
+  updateDots();
+}
+
+function updateDots() {
+  [1,2,3].forEach(i => {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.classList.remove('active','done');
+    if (i < currentStep) dot.classList.add('done');
+    else if (i === currentStep) dot.classList.add('active');
+  });
+}
+
+function changeGuests(d) {
+  guests = Math.max(1, Math.min(20, guests + d));
+  document.getElementById('guest-count').textContent = guests;
+}
+
+function shakeField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.borderColor = 'var(--rose)';
+  setTimeout(() => el.style.borderColor = '', 1500);
+}
+
+function submitReservation() {
+  const name = document.getElementById('res-name').value;
+  const phone = document.getElementById('res-phone').value;
+  if (!name || !phone) { shakeField(!name ? 'res-name' : 'res-phone'); return; }
+  document.getElementById('step-3').classList.remove('active');
+  document.getElementById('step-indicators').style.display = 'none';
+  const success = document.getElementById('res-success');
+  success.style.display = 'block';
+  // Confetti
+  confettiBurst();
+}
+
+function confettiBurst() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  const pieces = [];
+  for (let i=0; i<80; i++) {
+    pieces.push({
+      x: window.innerWidth/2, y: window.innerHeight/2,
+      vx: (Math.random()-0.5)*12, vy: Math.random()*-10-2,
+      color: ['#e8b84b','#c8832a','#d4756b','#7b9e6b','#fdf6ec'][Math.floor(Math.random()*5)],
+      size: Math.random()*6+3, rot: Math.random()*360,
+      vrot: (Math.random()-0.5)*10, life: 1
+    });
+  }
+  let frame = 0;
+  function drop() {
+    frame++;
+    if (frame > 80) return;
+    pieces.forEach(p => {
+      p.x += p.vx; p.vy += 0.3; p.y += p.vy;
+      p.rot += p.vrot; p.life -= 0.012;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    requestAnimationFrame(drop);
+  }
+  drop();
+}
+
+// ═══════════════════════════════════════════
+// GIFT CARD
+// ═══════════════════════════════════════════
+function selectAmount(btn, amount) {
+  document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const display = document.getElementById('card-amount-display');
+  if (amount === 'other') {
+    display.textContent = '? €';
+  } else {
+    display.textContent = amount + ' €';
+    gsap.from(display, { scale:1.3, duration:0.4, ease:'back.out(2)' });
+  }
+}
+
+function updateCardMessage(msg) {
+  const el = document.getElementById('card-msg-display');
+  el.textContent = msg || 'Herzlichen Glückwunsch!';
+}
+
+function tiltCard(e) {
+  const card = document.getElementById('gift-card');
+  const rect = card.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  card.style.transform = `rotateY(${x*25}deg) rotateX(${-y*15}deg)`;
+}
+function resetCard() {
+  const card = document.getElementById('gift-card');
+  card.style.transform = 'rotateY(-15deg) rotateX(5deg)';
+}
+
+// ═══════════════════════════════════════════
+// CONTACT FORM
+// ═══════════════════════════════════════════
+function sendContactForm() {
+  const name = document.getElementById('contact-name').value;
+  const email = document.getElementById('contact-email').value;
+  const msg = document.getElementById('contact-message').value;
+  if (!name || !msg) return;
+  window.location.href = `mailto:info@nikis.cafe?subject=Anfrage von ${encodeURIComponent(name)}&body=${encodeURIComponent(msg)}`;
+}
+
+// ═══════════════════════════════════════════
+// SMOOTH ANCHOR LINKS
+// ═══════════════════════════════════════════
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+// GSAP SCROLL PARALLAX
+// ═══════════════════════════════════════════
+gsap.to('.hero-content', {
+  y: 80, opacity: 0.3,
+  scrollTrigger: { trigger:'#hero', start:'top top', end:'bottom top', scrub:true }
+});
+</script>
+</body>
+</html>
